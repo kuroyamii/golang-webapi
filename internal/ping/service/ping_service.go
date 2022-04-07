@@ -1,5 +1,6 @@
 package pingServicePkg
 
 type PingService interface {
-	GetPingData() string
+	GetPingDataSuccess() string
+	GetPingDataError() string
 }

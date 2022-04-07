@@ -14,13 +14,24 @@ type PingController struct {
 	ps     pingServicePkg.PingService
 }
 
-func (pc *PingController) HandlePing(w http.ResponseWriter, r *http.Request) {
-	pingData := pc.ps.GetPingData()
+func (pc *PingController) HandlePingSuccess(w http.ResponseWriter, r *http.Request) {
+	pingData := pc.ps.GetPingDataSuccess()
 
 	w.WriteHeader(http.StatusOK)
 	response.NewBaseResponse(
 		http.StatusOK,
 		http.StatusText(http.StatusOK),
+		response.NewErrorResponseData(),
+		pingData,
+	).ToJSON(w)
+}
+func (pc *PingController) HandlePingError(w http.ResponseWriter, r *http.Request) {
+	pingData := pc.ps.GetPingDataError()
+
+	w.WriteHeader(http.StatusOK)
+	response.NewBaseResponse(
+		http.StatusNoContent,
+		http.StatusText(http.StatusNoContent),
 		response.NewErrorResponseData(
 			response.NewErrorResponseValue("msg1", "error value1"),
 			response.NewErrorResponseValue("msg2", "error value2"),
@@ -31,7 +42,8 @@ func (pc *PingController) HandlePing(w http.ResponseWriter, r *http.Request) {
 }
 
 func (pc *PingController) InitializeEndPoint() {
-	pc.router.HandleFunc(global.API_PATH_PING, pc.HandlePing)
+	pc.router.HandleFunc(global.API_PATH_PING_SUCCESS, pc.HandlePingSuccess)
+	pc.router.HandleFunc(global.API_PATH_PING_ERROR, pc.HandlePingError)
 }
 
 func ProvidePingController(router *mux.Router, ps pingServicePkg.PingService) PingController {
