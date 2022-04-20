@@ -1,1 +1,3 @@
-# golang-webapi
+# Overview
+## Prerequisites
+- Have installed MySQL
