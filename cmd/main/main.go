@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"os"
 	"strings"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/kuroyamii/golang-webapi/pkg/controller"
+	"github.com/kuroyamii/golang-webapi/pkg/database"
 	"github.com/kuroyamii/golang-webapi/pkg/middleware"
 	"github.com/kuroyamii/golang-webapi/pkg/server"
 )
@@ -38,11 +41,20 @@ func initializeGlobalRouter(envVariables map[string]string) *mux.Router {
 	return router
 }
 
+func initializeDatabase(envVariables map[string]string) *sql.DB {
+	return database.GetDatabase(
+		envVariables["DB_ADDRESS"],
+		envVariables["DB_USERNAME"],
+		envVariables["DB_PASSWORD"],
+		envVariables["DB_NAME"])
+}
+
 func main() {
 	godotenv.Load()
 	envVariables := getEnvVariables()
 	router := initializeGlobalRouter(envVariables)
-	controller.InitializeController(router)
+	db := initializeDatabase(envVariables)
+	controller.InitializeController(router, db)
 
 	server := server.ProvideServer(envVariables["SERVER_ADDRESS"], router)
 	server.ListenAndServe()
