@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	GET_ALL_FOOD_BY_TYPE = `SELECT * FROM food
-	WHERE food_type = ?;`
+	GET_ALL_FOOD_BY_TYPE = `SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
+	FROM food f
+	INNER JOIN food_type t ON t.food_type_id = f.food_type_id
+	WHERE t.type_name = ?;`
 )
 
 type cafeRepositoryImpl struct {
@@ -31,13 +33,14 @@ func (cr cafeRepositoryImpl) GetAllFoodByType(ctx context.Context, food_type str
 
 	for result.Next() {
 		var foodItem cafeEntity.Food
-		err = result.Scan(&foodItem.FoodID, &foodItem.Name, &foodItem.Price, &foodItem.FoodType, &foodItem.Description, &foodItem.Stock)
+		err = result.Scan(&foodItem.FoodID, &foodItem.Name,&foodItem.ImagePath, &foodItem.Price, &foodItem.FoodType, &foodItem.Description, &foodItem.Stock)
 		if err != nil {
 			log.Printf("ERROR Scanning data -> foodType: %v, error: %v", food_type, err.Error())
 			return nil, err
 		}
 		foods = append(foods, &foodItem)
 	}
+	log.Println(foods)
 
 	return foods, nil
 }

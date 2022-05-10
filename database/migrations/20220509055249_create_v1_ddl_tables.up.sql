@@ -1,11 +1,11 @@
-CREATE TABLE seat(
+CREATE TABLE IF NOT EXISTS seat(
 	table_id INT,
 	status TINYINT,
 	PRIMARY KEY (table_id)
 );
 
 
-CREATE TABLE customer(
+CREATE TABLE IF NOT EXISTS customer(
 	customer_id BIGINT NOT NULL AUTO_INCREMENT,
 	name VARCHAR(50),
 	table_id INT,
@@ -13,7 +13,7 @@ CREATE TABLE customer(
 	FOREIGN KEY (table_id) REFERENCES seat(table_id)
 );
 
-CREATE TABLE orders(
+CREATE TABLE IF NOT EXISTS orders(
 	order_id BIGINT NOT NULL AUTO_INCREMENT,
 	customer_id BIGINT,
 	ordered_at DATETIME,
@@ -21,18 +21,26 @@ CREATE TABLE orders(
 	FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 );
 
-
-CREATE TABLE food(
-	food_id INT NOT NULL AUTO_INCREMENT,
-	name VARCHAR(50),
-	price INT,
-	food_type VARCHAR(10),
-	description TEXT,
-	stock INT,
-	PRIMARY KEY (food_id)
+CREATE TABLE IF NOT EXISTS food_type(
+	food_type_id INT NOT NULL AUTO_INCREMENT,
+	type_name VARCHAR(15),
+	PRIMARY KEY (food_type_id)
 );
 
-CREATE TABLE order_detail(
+
+CREATE TABLE IF NOT EXISTS food(
+	food_id INT NOT NULL AUTO_INCREMENT,
+	name VARCHAR(50),
+	image_path TEXT,
+	price INT,
+	food_type_id INT,
+	description TEXT,
+	stock INT,
+	PRIMARY KEY (food_id),
+	FOREIGN KEY (food_type_id) REFERENCES food_type(food_type_id)
+);
+
+CREATE TABLE IF NOT EXISTS order_detail(
 	details_id BIGINT NOT NULL AUTO_INCREMENT,
 	order_id BIGINT,
 	food_id INT,
@@ -41,7 +49,7 @@ CREATE TABLE order_detail(
 	FOREIGN KEY (food_id) REFERENCES food(food_id)
 );
 
-CREATE TABLE records(
+CREATE TABLE IF NOT EXISTS records(
 	record_id BIGINT NOT NULL AUTO_INCREMENT,
 	food_id INT,
 	amount INT,

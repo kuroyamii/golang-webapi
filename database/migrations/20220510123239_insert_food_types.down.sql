@@ -1,0 +1,2 @@
+DELETE FROM food_type;
+ALTER TABLE food_type AUTO_INCREMENT = 1;
