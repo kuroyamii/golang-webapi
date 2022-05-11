@@ -8,4 +8,5 @@ import (
 
 type CafeRepository interface {
 	GetAllFoodByType(ctx context.Context, food_type string) (cafeEntity.Foods, error)
+	SearchFood(ctx context.Context, query string)(cafeEntity.Foods, error)
 }

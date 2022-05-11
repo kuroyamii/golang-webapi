@@ -37,6 +37,19 @@ func (cc *CafeController) handleGetFoodByType(w http.ResponseWriter, r *http.Req
 	return
 }
 
+func (cc *CafeController) handleGetFoodByQuery(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	queryText := query.Get("foodSearch")
+	foods, err := cc.cs.SearchFood(r.Context(), queryText)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), response.NewErrorResponseValue("Error", err.Error()))
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, foods).ToJSON(w)
+	return
+}
+
 func (cc *CafeController) InitializeEndpoints() {
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
+	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodGet)
 }
