@@ -6,6 +6,9 @@
 # Overview
 ## Prerequisites
 - Have installed MySQL
+- Have installed Go
+- Have installed Database Migrations ``https://github.com/golang-migrate/migrate``
+- Have learned the basics of Go
 
 ## Contributors ✨
 
