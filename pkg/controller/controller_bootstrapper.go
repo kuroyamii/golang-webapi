@@ -1,7 +1,12 @@
 package controller
 
 import (
+	"database/sql"
+
 	"github.com/gorilla/mux"
+	cafeControllerPkg "github.com/kuroyamii/golang-webapi/internal/cafe/controller"
+	cafeRepositoryPkg "github.com/kuroyamii/golang-webapi/internal/cafe/repository/impl"
+	cafeServicePkg "github.com/kuroyamii/golang-webapi/internal/cafe/service/impl"
 	pingController "github.com/kuroyamii/golang-webapi/internal/ping/controller"
 	pingServicePkg "github.com/kuroyamii/golang-webapi/internal/ping/service"
 	"github.com/kuroyamii/golang-webapi/pkg/middleware"
@@ -10,7 +15,7 @@ import (
 	authServicePkg "github.com/kuroyamii/golang-webapi/internal/auth/service"
 )
 
-func InitializeController(router *mux.Router) {
+func InitializeController(router *mux.Router, db *sql.DB) {
 	router.Use(middleware.ErrorHandlingMiddleware)
 
 	//init web router path
@@ -24,5 +29,10 @@ func InitializeController(router *mux.Router) {
 	authService := authServicePkg.ProvideAuthService()
 	authController := authControllerPkg.ProvideAuthController(webrouter, &authService)
 	authController.InitializeEndPoint()
+
+	cafeRepository := cafeRepositoryPkg.ProvideCafeRepository(db)
+	cafeService := cafeServicePkg.ProvideCafeService(cafeRepository, db)
+	cafeController := cafeControllerPkg.ProvideController(db, webrouter, cafeService)
+	cafeController.InitializeEndpoints()
 
 }

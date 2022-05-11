@@ -1,1 +1,6 @@
+# environment files
 .env
+# air configuration file
+.air.toml
+# tmp folder
+/tmp

@@ -1,0 +1,16 @@
+INSERT INTO seat(status)
+VALUES (FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE),
+(FALSE);
