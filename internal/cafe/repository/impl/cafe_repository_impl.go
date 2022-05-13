@@ -99,26 +99,27 @@ func (cr cafeRepositoryImpl) UnreserveTable(ctx context.Context, tableID int) er
 	return nil
 }
 
-func (cr cafeRepositoryImpl) InsertCustomer(ctx context.Context, name string, reserveTable int) error {
+func (cr cafeRepositoryImpl) InsertCustomer(ctx context.Context, name string, reserveTable int) (uint64, error) {
 	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_CUSTOMER)
 	if err != nil {
 		log.Printf("ERROR Preparing Statement -> customer name: %v, error: %v", name, err.Error())
-		return err
+		return 0, err
 	}
 	var res sql.Result
 	res, err = stmt.ExecContext(ctx, name, reserveTable)
 	if err != nil {
 		log.Printf("ERROR Executing Statement -> customer name: %v, error: %v", name, err.Error())
-		return err
+		return 0, err
 	}
 	var row int64
 	row, err = res.RowsAffected()
 	log.Printf("INFO Database -> Rows affected: %v", row)
-	err = cr.ReserveTable(ctx, reserveTable)
+	row, err = res.LastInsertId()
+	num := uint64(row)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return num, nil
 }
 
 func (cr cafeRepositoryImpl) RemoveCustomer(ctx context.Context, customerID uint64, reserveTable int) error {
@@ -176,21 +177,25 @@ func (cr cafeRepositoryImpl) GetOrderDetailsByOrderID(ctx context.Context, order
 	return orderDetails, nil
 }
 
-func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64, sumOfWaiter int) error {
+func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64, sumOfWaiter int) (uint64, error) {
 	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_ORDER)
 	if err != nil {
 		log.Printf("ERROR Preparing Statement -> customer ID: %v, error: %v", customerID, err.Error())
-		return err
+		return 0, err
 	}
 	// var res sql.Result
 	rand.Seed(time.Now().UnixNano())
-	_, err = stmt.ExecContext(ctx, customerID, rand.Intn(sumOfWaiter-1)+1)
+	res, err := stmt.ExecContext(ctx, customerID, rand.Intn(sumOfWaiter-1)+1)
 	if err != nil {
 		log.Printf("ERROR Executing Statement -> customer ID: %v, error: %v", customerID, err.Error())
-		return err
+		return 0, err
 	}
-
-	return nil
+	row, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	id := uint64(row)
+	return id, nil
 }
 
 func (cr cafeRepositoryImpl) InsertOrderDetails(ctx context.Context, orderID uint64, foodID []int) error {
@@ -202,7 +207,7 @@ func (cr cafeRepositoryImpl) InsertOrderDetails(ctx context.Context, orderID uin
 
 	// var res sql.Result
 	for _, food := range foodID {
-		_, err = stmt.ExecContext(ctx, food)
+		_, err = stmt.ExecContext(ctx, orderID, food)
 		if err != nil {
 			log.Printf("ERROR Executing Statement -> order ID: %v, food ID: %v, error: %v", orderID, food, err.Error())
 			return err
@@ -330,4 +335,20 @@ func (cr cafeRepositoryImpl) GetFoodByFoodID(ctx context.Context, foodID int) (c
 		return cafeEntity.Food{}, err
 	}
 	return food, nil
+}
+
+func (cr cafeRepositoryImpl) GetSumWaiter(ctx context.Context) (int, error) {
+	rows, err := cr.DB.QueryContext(ctx, cafeQuery.GET_WAITER_SUM)
+	if err != nil {
+		log.Printf("ERROR Querying -> error: %v", err.Error())
+		return 0, err
+	}
+	var sum int
+	for rows.Next() {
+		err = rows.Scan(&sum)
+		if err != nil {
+			log.Printf("ERROR Scanning Rows -> error: %v", err.Error())
+		}
+	}
+	return sum, nil
 }

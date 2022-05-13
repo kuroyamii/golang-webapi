@@ -223,3 +223,27 @@ func (cs cafeServiceImpl) GetCustomerOrderByCustomerID(ctx context.Context, cust
 	}
 	return orderResponse, nil
 }
+
+func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int) error {
+	err := cs.cr.ReserveTable(ctx, tableID)
+	if err != nil {
+		return err
+	}
+	customerID, err := cs.cr.InsertCustomer(ctx, customerName, tableID)
+	if err != nil {
+		return err
+	}
+	sum, err := cs.cr.GetSumWaiter(ctx)
+	if err != nil {
+		return err
+	}
+	orderID, err := cs.cr.InsertOrder(ctx, customerID, sum)
+	if err != nil {
+		return err
+	}
+	err = cs.cr.InsertOrderDetails(ctx, orderID, foodID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

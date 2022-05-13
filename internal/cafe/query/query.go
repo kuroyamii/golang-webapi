@@ -105,4 +105,9 @@ const (
 	INNER JOIN food_type t ON t.food_type_id = f.food_type_id
 	WHERE f.food_id = ?;
 	`
+
+	GET_WAITER_SUM = `
+	SELECT COUNT(waiter_id) AS sum
+	FROM waiters;
+	`
 )
