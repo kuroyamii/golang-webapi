@@ -15,13 +15,23 @@ CREATE TABLE IF NOT EXISTS customer(
 	ON UPDATE NO ACTION
 );
 
+CREATE TABLE IF NOT EXISTS waiters(
+	waiter_id INT NOT NULL AUTO_INCREMENT,
+	name VARCHAR(50),
+	PRIMARY KEY (waiter_id)
+);
+
 CREATE TABLE IF NOT EXISTS orders(
 	order_id BIGINT NOT NULL AUTO_INCREMENT,
 	customer_id BIGINT,
+	waiter_id INT,
 	ordered_at DATETIME,
 	PRIMARY KEY (order_id),
 	FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 	ON DELETE CASCADE
+	ON UPDATE NO ACTION,
+	FOREIGN KEY (waiter_id) REFERENCES waiters(waiter_id)
+	ON DELETE NO ACTION
 	ON UPDATE NO ACTION
 );
 

@@ -37,23 +37,30 @@ type Seat struct {
 type Seats []*Seat
 
 type Order struct {
-	OrderID    uint64 `db:"order_id"`
-	CustomerID uint64 `db:"customer_id"`
-	OrderedAt time.Time `db:"ordered_at"`
+	OrderID    uint64    `db:"order_id"`
+	CustomerID uint64    `db:"customer_id"`
+	OrderedAt  time.Time `db:"ordered_at"`
+	WaiterID   int       `db:"waiter_id"`
 }
 
-type OrderDetail struct{
+type OrderDetail struct {
 	DetailID uint64 `db:"details_id"`
-	OrderID uint64 `db:"order_id"`
-	FoodID int `db:"food_id"`
+	OrderID  uint64 `db:"order_id"`
+	FoodID   int    `db:"food_id"`
 }
 type OrderDetails []*OrderDetail
 
-type Record struct{
+type Record struct {
 	RecordID uint64 `db:"record_id"`
-	FoodID int `db:"food_id"`
-	Amount int `db:"amount"`
+	FoodID   int    `db:"food_id"`
+	Amount   int    `db:"amount"`
 }
 
-
 type Records []*Record
+
+type Waiter struct {
+	WaiterID int    `db:"waiter_id"`
+	Name     string `db:"name"`
+}
+
+type Waiters []*Waiter
