@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  inugami-backend:
+    container_name: inugami-backend
+    build: .
+    ports:
+      - "8080:8080"
+    networks:
+      - inugami-net
+  inugami-database:
+    container_name: inugami-mysql-db
+    image: mysql:latest
+    networks:
+      - inugami-net
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    ports:
+      - 3311:3306
+networks:
+  inugami-net:
+    name: INUGAMI_NET
