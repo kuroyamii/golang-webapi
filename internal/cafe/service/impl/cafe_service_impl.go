@@ -247,3 +247,29 @@ func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, t
 	}
 	return nil
 }
+
+func (cs cafeServiceImpl) PayBill(ctx context.Context, customerID uint64) error {
+	logs, err := cs.cr.TransferToLog(ctx, customerID)
+	if err != nil {
+		return err
+	}
+	tableID := logs[0].TableID
+	err = cs.cr.RemoveCustomer(ctx, customerID, tableID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cs cafeServiceImpl) GetCustomerByID(ctx context.Context, customerID uint64) (cafeDto.CustomerResponse, error) {
+	cust, err := cs.cr.GetCustomerByCustomerID(ctx, customerID)
+	if err != nil {
+		return cafeDto.CustomerResponse{}, nil
+	}
+	customer := cafeDto.CustomerResponse{
+		Name:       cust.Name,
+		TableID:    cust.TableID,
+		CustomerID: customerID,
+	}
+	return customer, nil
+}

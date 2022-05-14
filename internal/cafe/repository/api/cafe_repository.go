@@ -25,4 +25,6 @@ type CafeRepository interface {
 	GetWaiterByWaiterID(ctx context.Context, waiterID int) (cafeEntity.Waiter, error)
 	GetFoodByFoodID(ctx context.Context, foodID int) (cafeEntity.Food, error)
 	GetSumWaiter(ctx context.Context) (int, error)
+	TransferToLog(ctx context.Context, customerID uint64) (cafeEntity.Logs, error)
+	GetCustomerByCustomerID(ctx context.Context, customerID uint64) (cafeEntity.Customer, error)
 }

@@ -182,6 +182,48 @@ func (cc *CafeController) handlePlaceOrder(w http.ResponseWriter, r *http.Reques
 	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
 	return
 }
+
+func (cc *CafeController) handlePayBill(w http.ResponseWriter, r *http.Request) {
+	cp := new(cafeDto.CustomerPay)
+	err := cp.FromJSON(r.Body)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	err = cc.cs.PayBill(r.Context(), cp.CustomerID)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	return
+}
+
+func (cc *CafeController) handleGetSingleCustomer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID := vars["customerID"]
+	id, err := strconv.ParseUint(customerID, 10, 64)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	customer, err := cc.cs.GetCustomerByID(r.Context(), id)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, customer).ToJSON(w)
+	return
+}
+
 func (cc *CafeController) InitializeEndpoints() {
 	// cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodGet)
@@ -191,4 +233,6 @@ func (cc *CafeController) InitializeEndpoints() {
 	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_POST_ORDER, cc.handlePlaceOrder).Methods(http.MethodPost)
+	cc.router.HandleFunc(global.API_POST_PAYBILL, cc.handlePayBill).Methods(http.MethodPost)
+	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet)
 }
