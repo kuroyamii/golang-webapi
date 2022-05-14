@@ -64,3 +64,16 @@ type Waiter struct {
 }
 
 type Waiters []*Waiter
+
+type Log struct {
+	CustomerID   uint64    `db:"customer_id"`
+	CustomerName string    `db:"customer_name"`
+	TableID      int       `db:"table_id"`
+	OrderID      uint64    `db:"order_id"`
+	WaiterID     int       `db:"waiter_id"`
+	OrderedAt    time.Time `db:"ordered_at"`
+	DetailsID    uint64    `db:"details_id"`
+	FoodID       int       `db:"food_id"`
+}
+
+type Logs []*Log

@@ -78,3 +78,18 @@ CREATE TABLE IF NOT EXISTS records(
 	ON DELETE CASCADE
 	ON UPDATE NO ACTION
 );
+CREATE TABLE IF NOT EXISTS log(
+	log_id BIGINT NOT NULL AUTO_INCREMENT,
+	customer_id BIGINT,
+	customer_name VARCHAR(50),
+	table_id INT,
+	order_id BIGINT,
+	waiter_id INT,
+	ordered_at DATETIME,
+	details_id BIGINT,
+	food_id INT,
+	PRIMARY KEY (log_id),
+	FOREIGN KEY (food_id) REFERENCES food(food_id)
+	ON DELETE NO ACTION
+	ON UPDATE NO ACTION
+);

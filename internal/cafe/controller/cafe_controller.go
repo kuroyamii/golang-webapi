@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	cafeDto "github.com/kuroyamii/golang-webapi/internal/cafe/dto"
 	cafeService "github.com/kuroyamii/golang-webapi/internal/cafe/service/api"
 	"github.com/kuroyamii/golang-webapi/internal/global"
 	"github.com/kuroyamii/golang-webapi/pkg/entity/response"
@@ -161,6 +162,68 @@ func (cc *CafeController) handleOrderByCustomerID(w http.ResponseWriter, r *http
 	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, data).ToJSON(w)
 	return
 }
+
+func (cc *CafeController) handlePlaceOrder(w http.ResponseWriter, r *http.Request) {
+	orderRequest := new(cafeDto.OrderRequestBody)
+	err := orderRequest.FromJSON(r.Body)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	err = cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	return
+}
+
+func (cc *CafeController) handlePayBill(w http.ResponseWriter, r *http.Request) {
+	cp := new(cafeDto.CustomerPay)
+	err := cp.FromJSON(r.Body)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	err = cc.cs.PayBill(r.Context(), cp.CustomerID)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	return
+}
+
+func (cc *CafeController) handleGetSingleCustomer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID := vars["customerID"]
+	id, err := strconv.ParseUint(customerID, 10, 64)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	customer, err := cc.cs.GetCustomerByID(r.Context(), id)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, customer).ToJSON(w)
+	return
+}
+
 func (cc *CafeController) InitializeEndpoints() {
 	// cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodGet)
@@ -169,4 +232,7 @@ func (cc *CafeController) InitializeEndpoints() {
 	cc.router.HandleFunc(global.API_GET_SUM_PEOPLE, cc.handleSumPeople).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet)
+	cc.router.HandleFunc(global.API_POST_ORDER, cc.handlePlaceOrder).Methods(http.MethodPost)
+	cc.router.HandleFunc(global.API_POST_PAYBILL, cc.handlePayBill).Methods(http.MethodPost)
+	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet)
 }
