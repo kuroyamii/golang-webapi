@@ -1,30 +1,23 @@
 package cafeQuery
 
 const (
-	GET_ALL_FOOD_BY_TYPE = `
-	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
-	FROM food f
-	INNER JOIN food_type t ON t.food_type_id = f.food_type_id
-	WHERE t.type_name = ?;
-	`
-
 	SEARCH_FOODS_BY_QUERY = `
 	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
 	FROM food f
 	INNER JOIN food_type t USING(food_type_id)
-	WHERE f.name LIKE ?;
+	WHERE f.name LIKE "?";
 	`
 
 	RESERVE_TABLE = `
 	UPDATE seat
 	SET status = TRUE
-	WHERE table_id = ?
+	WHERE table_id = ?;
 	`
 
 	UNRESERVE_TABLE = `
 	UPDATE seat
 	SET status = FALSE
-	WHERE table_id = ?
+	WHERE table_id = ?;
 	`
 
 	INSERT_CUSTOMER = `
@@ -76,7 +69,7 @@ const (
 
 	GET_SEATS = `
 	SELECT table_id, status
-	FROM seat
+	FROM seat;
 	`
 
 	GET_SUM_PEOPLE = `
@@ -121,5 +114,43 @@ const (
 	INSERT_TO_LOG = `
 	INSERT INTO log(customer_id, customer_name, table_id, order_id, waiter_id, ordered_at, details_id, food_id)
 	VALUES (?,?,?,?,?,?,?,?);
+	`
+
+	GET_ESTIMATED_INCOME = `
+	SELECT r.record_id ,f.name AS food_name ,f.price *r.amount
+	AS estimated_income FROM records r 
+	INNER JOIN food f 
+	ORDER BY (f.price*r.amount) DESC;
+	`
+
+	GENERATE_CUSTOMER_VIEW = `
+	CREATE VIEW customer_view AS
+	SELECT l.food_id,f.name , COUNT(l.customer_id) AS "jumlah_customer"
+	FROM log l 
+	INNER JOIN food f USING(food_id)
+	GROUP BY l.food_id
+	HAVING COUNT(l.customer_id) > 0
+	ORDER BY COUNT(l.customer_id) DESC;
+	`
+
+	FILTER_PRICE_FROM_LOWER = `
+	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
+	FROM food f
+	INNER JOIN food_type t USING(food_type_id)
+	WHERE f.price BETWEEN ? AND ?
+	ORDER BY f.price ASC;
+	`
+
+	FILTER_PRICE_FROM_HIGHER = `
+	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
+	FROM food f
+	INNER JOIN food_type t USING(food_type_id)
+	WHERE f.price BETWEEN ? AND ?
+	ORDER BY f.price DESC;
+	`
+
+	GET_FOOD_TYPE = `
+	SELECT food_type_id,type_name
+	FROM food_type;
 	`
 )

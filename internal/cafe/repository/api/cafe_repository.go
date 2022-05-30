@@ -7,7 +7,7 @@ import (
 )
 
 type CafeRepository interface {
-	GetAllFoodByType(ctx context.Context, food_type string) (cafeEntity.Foods, error)
+	GetAllFoodByType(ctx context.Context, food_type []string) (cafeEntity.Foods, error)
 	SearchFood(ctx context.Context, query string) (cafeEntity.Foods, error)
 	ReserveTable(ctx context.Context, tableID int) error
 	UnreserveTable(ctx context.Context, tableID int) error
@@ -17,7 +17,7 @@ type CafeRepository interface {
 	InsertOrder(ctx context.Context, customerID uint64, sumOfWaiter int) (uint64, error)
 	GetOrderDetailsByOrderID(ctx context.Context, orderID uint64) (cafeEntity.OrderDetails, error)
 	InsertOrderDetails(ctx context.Context, orderID uint64, foodID []int) error
-	InsertRecord(ctx context.Context, foodID int, amount int) error
+	// InsertRecord(ctx context.Context, foodID int, amount int) error
 	GetAllWaiter(ctx context.Context) (cafeEntity.Waiters, error)
 	GetSeats(ctx context.Context) (cafeEntity.Seats, error)
 	GetSumPeople(ctx context.Context) (int, error)
@@ -27,4 +27,8 @@ type CafeRepository interface {
 	GetSumWaiter(ctx context.Context) (int, error)
 	TransferToLog(ctx context.Context, customerID uint64) (cafeEntity.Logs, error)
 	GetCustomerByCustomerID(ctx context.Context, customerID uint64) (cafeEntity.Customer, error)
+	GetEstimatedIncome(ctx context.Context) (cafeEntity.EstimatedIncomes, error)
+	FilterFoodByPrice(ctx context.Context, min int, max int, mode string) (cafeEntity.Foods, error)
+	GetFoodType(ctx context.Context) (cafeEntity.FoodTypes, error)
+	GetByTypeAndName(ctx context.Context, name string, foodType []string) (cafeEntity.Foods, error)
 }

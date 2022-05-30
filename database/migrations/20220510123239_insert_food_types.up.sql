@@ -1,5 +1,6 @@
 INSERT INTO food_type(type_name)
-VALUES ("food"),
-("beverages"),
-("dessert"),
-("combo");
+VALUES ("Sushi"),
+("Beverages"),
+("Dessert"),
+("Ramen"),
+("Side Dish");

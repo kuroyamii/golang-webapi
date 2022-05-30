@@ -46,8 +46,7 @@ type OrderDetailResponse struct {
 type OrderDetailsResponse []*OrderDetailsResponse
 
 type FoodTypeResponse struct {
-	FoodTypeID int    `json:"foodTypeID"`
-	TypeName   string `json:"typeName"`
+	TypeName string `json:"typeName"`
 }
 
 type FoodTypesResponse []*FoodTypeResponse
@@ -103,3 +102,10 @@ type CustomerDetail struct {
 }
 
 type CustomerDetails []*CustomerDetail
+
+type EstimatedIncomeResponse struct {
+	RecordID        uint64 `json:"recordID"`
+	FoodName        string `json:"foodName"`
+	EstimatedIncome int    `json:"estimatedIncome"`
+}
+type EstimatedIncomesResponse []*EstimatedIncomeResponse

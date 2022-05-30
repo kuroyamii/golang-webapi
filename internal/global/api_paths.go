@@ -4,6 +4,7 @@ const (
 	API_PATH_PING_SUCCESS         = "/ping/success"
 	API_PATH_PING_ERROR           = "/ping/error"
 	API_GET_FOOD_BY_TYPE          = "/food/{foodType}"
+	API_GET_FOOD_BY_ID            = "/food/id/{foodID}"
 	API_GET_FOOD_BY_QUERY         = "/food"
 	API_GET_SEATS                 = "/seats"
 	API_GET_WAITERS               = "/waiters"
@@ -13,4 +14,5 @@ const (
 	API_POST_ORDER                = "/order"
 	API_POST_PAYBILL              = "/pay"
 	API_GET_CUSTOMER_BY_ID        = "/customer/{customerID}"
+	API_GET_TYPES                 = "/types"
 )

@@ -3,7 +3,7 @@ package cafeRepositoryPkg
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"errors"
 	"log"
 	"math/rand"
 	"time"
@@ -21,8 +21,12 @@ func ProvideCafeRepository(db *sql.DB) *cafeRepositoryImpl {
 }
 
 func (cr cafeRepositoryImpl) SearchFood(ctx context.Context, query string) (cafeEntity.Foods, error) {
-	query = fmt.Sprint("%", query, "%")
-	result, err := cr.DB.Query(cafeQuery.SEARCH_FOODS_BY_QUERY)
+	SEARCH_FOODS_BY_QUERY := `
+	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
+	FROM food f
+	INNER JOIN food_type t USING(food_type_id)
+	WHERE f.name LIKE "%` + query + `%";`
+	result, err := cr.DB.Query(SEARCH_FOODS_BY_QUERY)
 	if err != nil {
 		log.Printf("ERROR Querying data -> query: %v, error: %v\n", query, err.Error())
 		return nil, err
@@ -41,8 +45,27 @@ func (cr cafeRepositoryImpl) SearchFood(ctx context.Context, query string) (cafe
 	return foods, nil
 }
 
-func (cr cafeRepositoryImpl) GetAllFoodByType(ctx context.Context, food_type string) (cafeEntity.Foods, error) {
-	result, err := cr.DB.Query(cafeQuery.GET_ALL_FOOD_BY_TYPE, food_type)
+func (cr cafeRepositoryImpl) GetAllFoodByType(ctx context.Context, food_type []string) (cafeEntity.Foods, error) {
+	var foodTypes string
+	for i := 0; i < len(food_type); i++ {
+		if i == 0 {
+			foodTypes = foodTypes + `?`
+		} else {
+			foodTypes = foodTypes + `,?`
+		}
+	}
+	foodInterface := make([]interface{}, len(food_type))
+	for index, item := range food_type {
+		foodInterface[index] = item
+	}
+	GET_ALL_FOOD_BY_TYPE := `
+	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
+	FROM food f
+	INNER JOIN food_type t ON t.food_type_id = f.food_type_id
+	WHERE t.type_name IN (` + foodTypes + `)
+	ORDER BY f.price;`
+
+	result, err := cr.DB.Query(GET_ALL_FOOD_BY_TYPE, foodInterface...)
 	if err != nil {
 		log.Printf("ERROR Querying data -> foodType: %v, error: %v\n", food_type, err.Error())
 		return nil, err
@@ -57,7 +80,6 @@ func (cr cafeRepositoryImpl) GetAllFoodByType(ctx context.Context, food_type str
 			return nil, err
 		}
 		foods = append(foods, &foodItem)
-
 	}
 
 	return foods, nil
@@ -216,19 +238,19 @@ func (cr cafeRepositoryImpl) InsertOrderDetails(ctx context.Context, orderID uin
 	return nil
 }
 
-func (cr cafeRepositoryImpl) InsertRecord(ctx context.Context, foodID int, amount int) error {
-	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_RECORD)
-	if err != nil {
-		log.Printf("ERROR Preparing Statement -> food ID: %v, error: %v\n", foodID, err.Error())
-		return err
-	}
-	_, err = stmt.ExecContext(ctx, foodID, amount)
-	if err != nil {
-		log.Printf("ERROR Executing Statement -> food ID: %v, error: %v\n", foodID, err.Error())
-		return err
-	}
-	return nil
-}
+// func (cr cafeRepositoryImpl) InsertRecord(ctx context.Context, foodID int, amount int) error {
+// 	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_RECORD)
+// 	if err != nil {
+// 		log.Printf("ERROR Preparing Statement -> food ID: %v, error: %v\n", foodID, err.Error())
+// 		return err
+// 	}
+// 	_, err = stmt.ExecContext(ctx, foodID, amount)
+// 	if err != nil {
+// 		log.Printf("ERROR Executing Statement -> food ID: %v, error: %v\n", foodID, err.Error())
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func (cr cafeRepositoryImpl) GetAllWaiter(ctx context.Context) (cafeEntity.Waiters, error) {
 	rows, err := cr.DB.QueryContext(ctx, cafeQuery.GET_ALL_WAITER)
@@ -331,9 +353,12 @@ func (cr cafeRepositoryImpl) GetFoodByFoodID(ctx context.Context, foodID int) (c
 	var food cafeEntity.Food
 	for rows.Next() {
 		err = rows.Scan(&food.FoodID, &food.Name, &food.ImagePath, &food.Price, &food.FoodType, &food.Description, &food.Stock)
-		log.Printf("ERROR Scanning Rows ->  foodID: %v, error: %v\n", foodID, err.Error())
-		return cafeEntity.Food{}, err
+		if err != nil {
+			log.Printf("ERROR Scanning Rows ->  foodID: %v, error: %v\n", foodID, err.Error())
+			return cafeEntity.Food{}, err
+		}
 	}
+
 	return food, nil
 }
 
@@ -401,14 +426,122 @@ func (cr cafeRepositoryImpl) TransferToLog(ctx context.Context, customerID uint6
 func (cr cafeRepositoryImpl) GetCustomerByCustomerID(ctx context.Context, customerID uint64) (cafeEntity.Customer, error) {
 	rows, err := cr.DB.QueryContext(ctx, cafeQuery.GET_CUSTOMER_BY_ID, customerID)
 	if err != nil {
-		log.Printf("ERROR Querying -> customerID: %v, error: %v\n\n", customerID, err.Error())
+		log.Printf("ERROR Querying -> customerID: %v, error: %v\n", customerID, err.Error())
+		return cafeEntity.Customer{}, err
 	}
 	var cust cafeEntity.Customer
 	for rows.Next() {
 		err = rows.Scan(&cust.CustomerID, &cust.Name, &cust.TableID)
 		if err != nil {
 			log.Printf("ERROR Scanning Rows -> customerID: %v, error: %v\n", customerID, err.Error())
+			return cafeEntity.Customer{}, err
 		}
 	}
 	return cust, nil
+}
+
+func (cr cafeRepositoryImpl) GetEstimatedIncome(ctx context.Context) (cafeEntity.EstimatedIncomes, error) {
+	rows, err := cr.DB.QueryContext(ctx, cafeQuery.GET_ESTIMATED_INCOME)
+	if err != nil {
+		log.Printf("ERROR Querying -> error: %v\n", err.Error())
+		return nil, err
+	}
+	var ei cafeEntity.EstimatedIncomes
+	for rows.Next() {
+		var item cafeEntity.EstimatedIncome
+		err = rows.Scan(&item.RecordID, &item.FoodName, &item.EstimatedIncome)
+		if err != nil {
+			log.Printf("ERROR Scanning -> error: %v\n", err.Error())
+			return nil, err
+		}
+		ei = append(ei, &item)
+	}
+	return ei, nil
+}
+
+func (cr cafeRepositoryImpl) FilterFoodByPrice(ctx context.Context, min int, max int, mode string) (cafeEntity.Foods, error) {
+	var query string
+	if mode == "desc" {
+		query = cafeQuery.FILTER_PRICE_FROM_HIGHER
+	} else if mode == "asc" {
+		query = cafeQuery.FILTER_PRICE_FROM_LOWER
+	} else {
+		err := errors.New("Invalid sorting mode!")
+		return nil, err
+	}
+	rows, err := cr.DB.QueryContext(ctx, query, min, max)
+	if err != nil {
+		log.Printf("ERROR Querying -> error: %v\n", err.Error())
+		return nil, err
+	}
+	var foods cafeEntity.Foods
+	for rows.Next() {
+		var food cafeEntity.Food
+		err = rows.Scan(&food.FoodID, &food.Name, &food.ImagePath, &food.Price, &food.FoodType, &food.Description, &food.Stock)
+		if err != nil {
+			log.Printf("ERROR Querying -> error: %v\n", err.Error())
+			return nil, err
+		}
+		foods = append(foods, &food)
+	}
+	return foods, nil
+}
+
+func (cr cafeRepositoryImpl) GetFoodType(ctx context.Context) (cafeEntity.FoodTypes, error) {
+	rows, err := cr.DB.QueryContext(ctx, cafeQuery.GET_FOOD_TYPE)
+	if err != nil {
+		log.Printf("ERROR Querying -> error: %v\n", err)
+		return nil, err
+	}
+	var foodTypes cafeEntity.FoodTypes
+	for rows.Next() {
+		var foodType cafeEntity.FoodType
+		err = rows.Scan(&foodType.FoodTypeID, &foodType.FoodType)
+		if err != nil {
+			log.Printf("ERROR Scanning -> error: %v\n", err)
+			return nil, err
+		}
+		foodTypes = append(foodTypes, &foodType)
+	}
+	return foodTypes, nil
+}
+
+func (cr cafeRepositoryImpl) GetByTypeAndName(ctx context.Context, name string, foodType []string) (cafeEntity.Foods, error) {
+	var foodTypes string
+	for i := 0; i < len(foodType); i++ {
+		if i == 0 {
+			foodTypes = foodTypes + `?`
+		} else {
+			foodTypes = foodTypes + `,?`
+		}
+	}
+	foodInterface := make([]interface{}, len(foodType))
+	for index, item := range foodType {
+		foodInterface[index] = item
+	}
+	GET_ALL_FOOD_BY_TYPE_AND_NAME := `
+	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
+	FROM food f
+	INNER JOIN food_type t ON t.food_type_id = f.food_type_id
+	WHERE t.type_name IN (` + foodTypes + `) AND f.name LIKE "%` + name + `%"
+	ORDER BY f.price;`
+
+	result, err := cr.DB.Query(GET_ALL_FOOD_BY_TYPE_AND_NAME, foodInterface...)
+	if err != nil {
+		log.Printf("ERROR Querying data -> foodType: %v, error: %v\n", foodType, err.Error())
+		return nil, err
+	}
+	foods := cafeEntity.Foods{}
+
+	for result.Next() {
+		var foodItem cafeEntity.Food
+		err = result.Scan(&foodItem.FoodID, &foodItem.Name, &foodItem.ImagePath, &foodItem.Price, &foodItem.FoodType, &foodItem.Description, &foodItem.Stock)
+		if err != nil {
+			log.Printf("ERROR Scanning data -> foodType: %v, error: %v\n", foodType, err.Error())
+			return nil, err
+		}
+		foods = append(foods, &foodItem)
+	}
+
+	return foods, nil
 }
