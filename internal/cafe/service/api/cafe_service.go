@@ -15,7 +15,7 @@ type CafeService interface {
 	GetSumPeople(ctx context.Context) (cafeDto.PeopleSummary, error)
 	GetCustomersOrderData(ctx context.Context) (cafeDto.CustomerDetails, error)
 	GetCustomerOrderByCustomerID(ctx context.Context, customerID uint64) (cafeDto.OrderData, error)
-	PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int) error
+	PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int, waiterID int, amount []int) (uint64, error)
 	PayBill(ctx context.Context, customerID uint64) error
 	GetCustomerByID(ctx context.Context, customerID uint64) (cafeDto.CustomerResponse, error)
 	GetFoodByFoodID(ctx context.Context, foodID int) (cafeDto.FoodResponse, error)

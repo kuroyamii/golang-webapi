@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	cafeDto "github.com/kuroyamii/golang-webapi/internal/cafe/dto"
 	CafeRepository "github.com/kuroyamii/golang-webapi/internal/cafe/repository/api"
@@ -225,28 +226,25 @@ func (cs cafeServiceImpl) GetCustomerOrderByCustomerID(ctx context.Context, cust
 	return orderResponse, nil
 }
 
-func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int) error {
+func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int, waiterID int, amount []int) (uint64, error) {
 	err := cs.cr.ReserveTable(ctx, tableID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	customerID, err := cs.cr.InsertCustomer(ctx, customerName, tableID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	sum, err := cs.cr.GetSumWaiter(ctx)
+	orderID, err := cs.cr.InsertOrder(ctx, customerID, waiterID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	orderID, err := cs.cr.InsertOrder(ctx, customerID, sum)
+	log.Println(orderID)
+	err = cs.cr.InsertOrderDetails(ctx, orderID, foodID, amount)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	err = cs.cr.InsertOrderDetails(ctx, orderID, foodID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return customerID, nil
 }
 
 func (cs cafeServiceImpl) PayBill(ctx context.Context, customerID uint64) error {

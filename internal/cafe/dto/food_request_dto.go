@@ -9,10 +9,12 @@ type OrderRequestBody struct {
 	CustomerName string `json:"customerName" validate:"required"`
 	TableID      int    `json:"tableID" validate:"required"`
 	FoodID       []int  `json:"foodID" validate:"required"`
+	WaiterID     int    `json:"waiterID" validate:"required"`
+	Amount       []int  `json:"amount" validate:"required"`
 }
 
 type CustomerPay struct {
-	CustomerID uint64 `json:"customer_id"`
+	CustomerID uint64 `json:"customerID"`
 }
 
 func (or *OrderRequestBody) FromJSON(r io.Reader) error {

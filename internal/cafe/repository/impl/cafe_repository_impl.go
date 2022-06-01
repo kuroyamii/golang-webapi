@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-	"math/rand"
-	"time"
 
 	cafeEntity "github.com/kuroyamii/golang-webapi/internal/cafe/entity"
 	cafeQuery "github.com/kuroyamii/golang-webapi/internal/cafe/query"
@@ -199,15 +197,14 @@ func (cr cafeRepositoryImpl) GetOrderDetailsByOrderID(ctx context.Context, order
 	return orderDetails, nil
 }
 
-func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64, sumOfWaiter int) (uint64, error) {
+func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64, waiterID int) (uint64, error) {
 	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_ORDER)
 	if err != nil {
 		log.Printf("ERROR Preparing Statement -> customer ID: %v, error: %v\n", customerID, err.Error())
 		return 0, err
 	}
-	// var res sql.Result
-	rand.Seed(time.Now().UnixNano())
-	res, err := stmt.ExecContext(ctx, customerID, rand.Intn(sumOfWaiter-1)+1)
+	var res sql.Result
+	res, err = stmt.ExecContext(ctx, customerID, waiterID)
 	if err != nil {
 		log.Printf("ERROR Executing Statement -> customer ID: %v, error: %v\n", customerID, err.Error())
 		return 0, err
@@ -217,10 +214,11 @@ func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64,
 		return 0, err
 	}
 	id := uint64(row)
+	log.Println(id)
 	return id, nil
 }
 
-func (cr cafeRepositoryImpl) InsertOrderDetails(ctx context.Context, orderID uint64, foodID []int) error {
+func (cr cafeRepositoryImpl) InsertOrderDetails(ctx context.Context, orderID uint64, foodID []int, amount []int) error {
 	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_ORDER_DETAIL)
 	if err != nil {
 		log.Printf("ERROR Preparing Statement -> order ID: %v, food ID: %v, error: %v\n", orderID, foodID, err.Error())
@@ -235,6 +233,25 @@ func (cr cafeRepositoryImpl) InsertOrderDetails(ctx context.Context, orderID uin
 			return err
 		}
 	}
+	stmt, err = cr.DB.PrepareContext(ctx, cafeQuery.DECREASE_STOCK)
+	if err != nil {
+		log.Printf("ERROR Preparing Statement -> order ID: %v, food ID: %v, error: %v\n", orderID, foodID, err.Error())
+		return err
+	}
+	st, err := cr.DB.PrepareContext(ctx, cafeQuery.INCREASE_RECORDS_AMOUNT)
+	for i, food := range foodID {
+		_, err = stmt.ExecContext(ctx, food)
+		if err != nil {
+			log.Printf("ERROR Executing Statement -> order ID: %v, food ID: %v, error: %v\n", orderID, food, err.Error())
+			return err
+		}
+		_, err = st.ExecContext(ctx, amount[i], food)
+		if err != nil {
+			log.Printf("ERROR Executing Statement -> order ID: %v, food ID: %v, error: %v\n", orderID, food, err.Error())
+			return err
+		}
+	}
+
 	return nil
 }
 

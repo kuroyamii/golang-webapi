@@ -3,6 +3,7 @@ package cafeControllerPkg
 import (
 	"database/sql"
 	"errors"
+	"log"
 
 	// "log"
 	"net/http"
@@ -171,20 +172,21 @@ func (cc *CafeController) handleOrderByCustomerID(w http.ResponseWriter, r *http
 func (cc *CafeController) handlePlaceOrder(w http.ResponseWriter, r *http.Request) {
 	orderRequest := new(cafeDto.OrderRequestBody)
 	err := orderRequest.FromJSON(r.Body)
+	log.Println(orderRequest)
 	if err != nil {
 		response.NewErrorResponse(http.StatusBadRequest,
 			http.StatusText(http.StatusBadRequest),
 			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
 		return
 	}
-	err = cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID)
+	id, err := cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID, orderRequest.WaiterID, orderRequest.Amount)
 	if err != nil {
 		response.NewErrorResponse(http.StatusBadRequest,
 			http.StatusText(http.StatusBadRequest),
 			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
 		return
 	}
-	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, id).ToJSON(w)
 	return
 }
 
@@ -277,8 +279,8 @@ func (cc *CafeController) handleGetTypes(w http.ResponseWriter, r *http.Request)
 func (cc *CafeController) InitializeEndpoints() {
 	// cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodPost, http.MethodOptions) //approved
-	cc.router.HandleFunc(global.API_GET_SEATS, cc.handleGetSeats).Methods(http.MethodGet, http.MethodOptions)
-	cc.router.HandleFunc(global.API_GET_WAITERS, cc.handleGetWaiter).Methods(http.MethodGet, http.MethodOptions)
+	cc.router.HandleFunc(global.API_GET_SEATS, cc.handleGetSeats).Methods(http.MethodGet, http.MethodOptions)                //approved
+	cc.router.HandleFunc(global.API_GET_WAITERS, cc.handleGetWaiter).Methods(http.MethodGet, http.MethodOptions)             //approved
 	cc.router.HandleFunc(global.API_GET_SUM_PEOPLE, cc.handleSumPeople).Methods(http.MethodGet, http.MethodOptions)
 	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet, http.MethodOptions)
 	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet, http.MethodOptions)

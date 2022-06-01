@@ -11,7 +11,7 @@ const (
 	API_GET_SUM_PEOPLE            = "/sum"
 	API_GET_DETAILS               = "/details"
 	API_GET_DETAIL_BY_CUSTOMER_ID = "/order"
-	API_POST_ORDER                = "/order"
+	API_POST_ORDER                = "/order/post"
 	API_POST_PAYBILL              = "/pay"
 	API_GET_CUSTOMER_BY_ID        = "/customer/{customerID}"
 	API_GET_TYPES                 = "/types"

@@ -1,13 +1,6 @@
 package cafeQuery
 
 const (
-	SEARCH_FOODS_BY_QUERY = `
-	SELECT f.food_id,f.name,f.image_path,f.price,t.type_name,f.description,f.stock
-	FROM food f
-	INNER JOIN food_type t USING(food_type_id)
-	WHERE f.name LIKE "?";
-	`
-
 	RESERVE_TABLE = `
 	UPDATE seat
 	SET status = TRUE
@@ -58,10 +51,6 @@ const (
 	VALUES (?,?);
 	`
 
-	GET_FOOD_AND_RECORDS = `
-	
-	`
-
 	GET_ALL_WAITER = `
 	SELECT waiter_id, name
 	FROM waiters;
@@ -69,7 +58,8 @@ const (
 
 	GET_SEATS = `
 	SELECT table_id, status
-	FROM seat;
+	FROM seat
+	WHERE status IS FALSE;
 	`
 
 	GET_SUM_PEOPLE = `
@@ -152,5 +142,17 @@ const (
 	GET_FOOD_TYPE = `
 	SELECT food_type_id,type_name
 	FROM food_type;
+	`
+
+	DECREASE_STOCK = `
+	UPDATE food
+	SET stock = stock - 1
+	WHERE food_id = ?;
+	`
+
+	INCREASE_RECORDS_AMOUNT = `
+	UPDATE records
+	SET amount = amount + ?
+	WHERE food_id = ?;
 	`
 )
