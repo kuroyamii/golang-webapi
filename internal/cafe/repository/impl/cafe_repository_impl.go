@@ -562,3 +562,17 @@ func (cr cafeRepositoryImpl) GetByTypeAndName(ctx context.Context, name string, 
 
 	return foods, nil
 }
+
+func (cr cafeRepositoryImpl) Restock(ctx context.Context) error {
+	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.RESTOCK_ALL)
+	if err != nil {
+		log.Printf("ERROR Prepared Context -> error: %v\n", err.Error())
+		return err
+	}
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		log.Printf("ERROR Executed Context -> error: %v \n", err.Error())
+		return err
+	}
+	return nil
+}

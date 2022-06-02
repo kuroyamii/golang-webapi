@@ -155,4 +155,9 @@ const (
 	SET amount = amount + ?
 	WHERE food_id = ?;
 	`
+
+	RESTOCK_ALL = `
+	UPDATE food
+	SET stock = 50;
+	`
 )

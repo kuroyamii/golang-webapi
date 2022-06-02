@@ -22,4 +22,5 @@ type CafeService interface {
 	GetEstimatedIncome(ctx context.Context) (cafeDto.EstimatedIncomesResponse, error)
 	GetFoodTypes(ctx context.Context) (cafeDto.FoodTypesResponse, error)
 	GetFoodByTypeAndName(ctx context.Context, name string, foodType []string) (cafeDto.FoodsResponse, error)
+	RestockAll(ctx context.Context) error
 }

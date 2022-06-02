@@ -342,3 +342,11 @@ func (cs cafeServiceImpl) GetFoodByTypeAndName(ctx context.Context, name string,
 	}
 	return foodsResponse, nil
 }
+
+func (cs cafeServiceImpl) RestockAll(ctx context.Context) error {
+	err := cs.cr.Restock(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}

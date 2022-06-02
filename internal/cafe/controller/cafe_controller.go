@@ -276,6 +276,16 @@ func (cc *CafeController) handleGetTypes(w http.ResponseWriter, r *http.Request)
 	return
 }
 
+func (cc *CafeController) handleRestock(w http.ResponseWriter, r *http.Request) {
+	err := cc.cs.RestockAll(r.Context())
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	return
+}
+
 func (cc *CafeController) InitializeEndpoints() {
 	// cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodPost, http.MethodOptions)           //approved
@@ -289,4 +299,5 @@ func (cc *CafeController) InitializeEndpoints() {
 	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet, http.MethodOptions)        //approved
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_ID, cc.handleFoodByID).Methods(http.MethodGet, http.MethodOptions)                     //approved
 	cc.router.HandleFunc(global.API_GET_TYPES, cc.handleGetTypes).Methods(http.MethodGet, http.MethodOptions)                          //approved
+	cc.router.HandleFunc(global.API_RESTOCK, cc.handleRestock).Methods(http.MethodGet, http.MethodOptions)
 }

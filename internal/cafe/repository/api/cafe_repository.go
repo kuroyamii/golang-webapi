@@ -31,4 +31,5 @@ type CafeRepository interface {
 	FilterFoodByPrice(ctx context.Context, min int, max int, mode string) (cafeEntity.Foods, error)
 	GetFoodType(ctx context.Context) (cafeEntity.FoodTypes, error)
 	GetByTypeAndName(ctx context.Context, name string, foodType []string) (cafeEntity.Foods, error)
+	Restock(ctx context.Context) error
 }

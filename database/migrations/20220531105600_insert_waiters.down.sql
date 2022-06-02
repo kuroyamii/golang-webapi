@@ -1,2 +1,0 @@
-DELETE FROM waiters;
-ALTER TABLE waiters AUTO_INCREMENT = 1;

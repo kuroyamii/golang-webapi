@@ -15,4 +15,5 @@ const (
 	API_POST_PAYBILL              = "/pay"
 	API_GET_CUSTOMER_BY_ID        = "/customer/{customerID}"
 	API_GET_TYPES                 = "/types"
+	API_RESTOCK                   = "/restock"
 )
