@@ -226,7 +226,7 @@ func (cs cafeServiceImpl) GetCustomerOrderByCustomerID(ctx context.Context, cust
 	return orderResponse, nil
 }
 
-func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int, waiterID int, amount []int) (uint64, error) {
+func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int, waiterID int, amount []int, price int) (uint64, error) {
 	err := cs.cr.ReserveTable(ctx, tableID)
 	if err != nil {
 		return 0, err
@@ -235,7 +235,7 @@ func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, t
 	if err != nil {
 		return 0, err
 	}
-	orderID, err := cs.cr.InsertOrder(ctx, customerID, waiterID)
+	orderID, err := cs.cr.InsertOrder(ctx, customerID, waiterID, price)
 	if err != nil {
 		return 0, err
 	}

@@ -37,8 +37,8 @@ const (
 	`
 
 	INSERT_ORDER = `
-	INSERT INTO orders(customer_id,ordered_at, waiter_id)
-	VALUES ( ? ,now(), ? );
+	INSERT INTO orders(customer_id,ordered_at, waiter_id, total_price)
+	VALUES ( ? ,now(), ? , ? );
 	`
 
 	INSERT_ORDER_DETAIL = `

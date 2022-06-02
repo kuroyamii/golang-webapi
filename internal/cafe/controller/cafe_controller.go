@@ -179,7 +179,7 @@ func (cc *CafeController) handlePlaceOrder(w http.ResponseWriter, r *http.Reques
 			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
 		return
 	}
-	id, err := cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID, orderRequest.WaiterID, orderRequest.Amount)
+	id, err := cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID, orderRequest.WaiterID, orderRequest.Amount, orderRequest.Price)
 	if err != nil {
 		response.NewErrorResponse(http.StatusBadRequest,
 			http.StatusText(http.StatusBadRequest),
@@ -278,15 +278,15 @@ func (cc *CafeController) handleGetTypes(w http.ResponseWriter, r *http.Request)
 
 func (cc *CafeController) InitializeEndpoints() {
 	// cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodPost, http.MethodOptions) //approved
-	cc.router.HandleFunc(global.API_GET_SEATS, cc.handleGetSeats).Methods(http.MethodGet, http.MethodOptions)                //approved
-	cc.router.HandleFunc(global.API_GET_WAITERS, cc.handleGetWaiter).Methods(http.MethodGet, http.MethodOptions)             //approved
-	cc.router.HandleFunc(global.API_GET_SUM_PEOPLE, cc.handleSumPeople).Methods(http.MethodGet, http.MethodOptions)
-	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet, http.MethodOptions)
-	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet, http.MethodOptions)
-	cc.router.HandleFunc(global.API_POST_ORDER, cc.handlePlaceOrder).Methods(http.MethodPost, http.MethodOptions)
-	cc.router.HandleFunc(global.API_POST_PAYBILL, cc.handlePayBill).Methods(http.MethodPost, http.MethodOptions)
-	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet, http.MethodOptions)
-	cc.router.HandleFunc(global.API_GET_FOOD_BY_ID, cc.handleFoodByID).Methods(http.MethodGet, http.MethodOptions) //approved
-	cc.router.HandleFunc(global.API_GET_TYPES, cc.handleGetTypes).Methods(http.MethodGet, http.MethodOptions)      //approved
+	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodPost, http.MethodOptions)           //approved
+	cc.router.HandleFunc(global.API_GET_SEATS, cc.handleGetSeats).Methods(http.MethodGet, http.MethodOptions)                          //approved
+	cc.router.HandleFunc(global.API_GET_WAITERS, cc.handleGetWaiter).Methods(http.MethodGet, http.MethodOptions)                       //approved
+	cc.router.HandleFunc(global.API_GET_SUM_PEOPLE, cc.handleSumPeople).Methods(http.MethodGet, http.MethodOptions)                    //approved
+	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet, http.MethodOptions)             //approved
+	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet, http.MethodOptions) //approved
+	cc.router.HandleFunc(global.API_POST_ORDER, cc.handlePlaceOrder).Methods(http.MethodPost, http.MethodOptions)                      //approved
+	cc.router.HandleFunc(global.API_POST_PAYBILL, cc.handlePayBill).Methods(http.MethodPost, http.MethodOptions)                       //approved
+	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet, http.MethodOptions)        //approved
+	cc.router.HandleFunc(global.API_GET_FOOD_BY_ID, cc.handleFoodByID).Methods(http.MethodGet, http.MethodOptions)                     //approved
+	cc.router.HandleFunc(global.API_GET_TYPES, cc.handleGetTypes).Methods(http.MethodGet, http.MethodOptions)                          //approved
 }

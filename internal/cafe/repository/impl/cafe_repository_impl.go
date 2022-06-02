@@ -197,14 +197,14 @@ func (cr cafeRepositoryImpl) GetOrderDetailsByOrderID(ctx context.Context, order
 	return orderDetails, nil
 }
 
-func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64, waiterID int) (uint64, error) {
+func (cr cafeRepositoryImpl) InsertOrder(ctx context.Context, customerID uint64, waiterID int, price int) (uint64, error) {
 	stmt, err := cr.DB.PrepareContext(ctx, cafeQuery.INSERT_ORDER)
 	if err != nil {
 		log.Printf("ERROR Preparing Statement -> customer ID: %v, error: %v\n", customerID, err.Error())
 		return 0, err
 	}
 	var res sql.Result
-	res, err = stmt.ExecContext(ctx, customerID, waiterID)
+	res, err = stmt.ExecContext(ctx, customerID, waiterID, price)
 	if err != nil {
 		log.Printf("ERROR Executing Statement -> customer ID: %v, error: %v\n", customerID, err.Error())
 		return 0, err

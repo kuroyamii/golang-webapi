@@ -11,6 +11,7 @@ type OrderRequestBody struct {
 	FoodID       []int  `json:"foodID" validate:"required"`
 	WaiterID     int    `json:"waiterID" validate:"required"`
 	Amount       []int  `json:"amount" validate:"required"`
+	Price        int    `json:"price" validate:"required"`
 }
 
 type CustomerPay struct {
