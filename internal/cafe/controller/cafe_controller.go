@@ -3,6 +3,9 @@ package cafeControllerPkg
 import (
 	"database/sql"
 	"errors"
+	"log"
+
+	// "log"
 	"net/http"
 	"strconv"
 
@@ -41,15 +44,15 @@ func ProvideController(db *sql.DB, r *mux.Router, cs cafeService.CafeService) *C
 // }
 
 func (cc *CafeController) handleGetFoodByQuery(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query()
-	queryText := query.Get("foodSearch")
-	foodType := query.Get("foodType")
-	if queryText != "" && foodType != "" {
-		err := errors.New("forbidden query")
+	foodTypeRequest := new(cafeDto.FoodTypeRequestBody)
+	err := foodTypeRequest.FromJSON(r.Body)
+	if foodTypeRequest == nil {
+		err = errors.New("forbidden query")
 		response.NewErrorResponse(http.StatusForbidden, http.StatusText(http.StatusForbidden), response.NewErrorResponseValue("Error", err.Error())).ToJSON(w)
+		return
 	}
-	if queryText != "" {
-		foods, err := cc.cs.SearchFood(r.Context(), queryText)
+	if foodTypeRequest.FoodName != "" && len(foodTypeRequest.FoodType) == 0 {
+		foods, err := cc.cs.SearchFood(r.Context(), foodTypeRequest.FoodName)
 		if err != nil {
 			if err.Error() == "no data found" {
 				response.NewErrorResponse(http.StatusNotFound, http.StatusText(http.StatusNotFound), response.NewErrorResponseValue("Error", err.Error())).ToJSON(w)
@@ -61,14 +64,17 @@ func (cc *CafeController) handleGetFoodByQuery(w http.ResponseWriter, r *http.Re
 		response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, foods).ToJSON(w)
 		return
 	}
-	if foodType != "" {
-		foods, err := cc.cs.GetAllFoodByType(r.Context(), foodType)
-		if err.Error() == "no data found" {
-			response.NewErrorResponse(http.StatusNotFound,
-				http.StatusText(http.StatusNotFound),
-				response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+	if len(foodTypeRequest.FoodType) != 0 && foodTypeRequest.FoodName == "" {
+		foods, err := cc.cs.GetAllFoodByType(r.Context(), foodTypeRequest.FoodType)
+		if err != nil {
+			response.NewErrorResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), response.NewErrorResponseValue("Error", err.Error())).ToJSON(w)
 			return
 		}
+		response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, foods).ToJSON(w)
+		return
+	}
+	if foodTypeRequest.FoodName != "" && len(foodTypeRequest.FoodType) != 0 {
+		foods, err := cc.cs.GetFoodByTypeAndName(r.Context(), foodTypeRequest.FoodName, foodTypeRequest.FoodType)
 		if err != nil {
 			response.NewErrorResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), response.NewErrorResponseValue("Error", err.Error())).ToJSON(w)
 			return
@@ -166,20 +172,21 @@ func (cc *CafeController) handleOrderByCustomerID(w http.ResponseWriter, r *http
 func (cc *CafeController) handlePlaceOrder(w http.ResponseWriter, r *http.Request) {
 	orderRequest := new(cafeDto.OrderRequestBody)
 	err := orderRequest.FromJSON(r.Body)
+	log.Println(orderRequest)
 	if err != nil {
 		response.NewErrorResponse(http.StatusBadRequest,
 			http.StatusText(http.StatusBadRequest),
 			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
 		return
 	}
-	err = cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID)
+	id, err := cc.cs.PlaceOrder(r.Context(), orderRequest.CustomerName, orderRequest.TableID, orderRequest.FoodID, orderRequest.WaiterID, orderRequest.Amount, orderRequest.Price)
 	if err != nil {
 		response.NewErrorResponse(http.StatusBadRequest,
 			http.StatusText(http.StatusBadRequest),
 			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
 		return
 	}
-	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, id).ToJSON(w)
 	return
 }
 
@@ -224,15 +231,73 @@ func (cc *CafeController) handleGetSingleCustomer(w http.ResponseWriter, r *http
 	return
 }
 
+func (cc *CafeController) handleFoodByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	foodID := vars["foodID"]
+	id, err := strconv.ParseInt(foodID, 10, 64)
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	food, err := cc.cs.GetFoodByFoodID(r.Context(), int(id))
+
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, food).ToJSON(w)
+	return
+}
+
+func (cc *CafeController) handleEstimatedIncomes(w http.ResponseWriter, r *http.Request) {
+	ei, err := cc.cs.GetEstimatedIncome(r.Context())
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest,
+			http.StatusText(http.StatusBadRequest),
+			response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, ei).ToJSON(w)
+	return
+
+}
+
+func (cc *CafeController) handleGetTypes(w http.ResponseWriter, r *http.Request) {
+	foodType, err := cc.cs.GetFoodTypes(r.Context())
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, foodType).ToJSON(w)
+	return
+}
+
+func (cc *CafeController) handleRestock(w http.ResponseWriter, r *http.Request) {
+	err := cc.cs.RestockAll(r.Context())
+	if err != nil {
+		response.NewErrorResponse(http.StatusBadRequest, http.StatusText(http.StatusBadRequest), response.NewErrorResponseValue("error", err.Error())).ToJSON(w)
+		return
+	}
+	response.NewBaseResponse(http.StatusOK, http.StatusText(http.StatusOK), nil, nil).ToJSON(w)
+	return
+}
+
 func (cc *CafeController) InitializeEndpoints() {
 	// cc.router.HandleFunc(global.API_GET_FOOD_BY_TYPE, cc.handleGetFoodByType).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_SEATS, cc.handleGetSeats).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_WAITERS, cc.handleGetWaiter).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_SUM_PEOPLE, cc.handleSumPeople).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet)
-	cc.router.HandleFunc(global.API_POST_ORDER, cc.handlePlaceOrder).Methods(http.MethodPost)
-	cc.router.HandleFunc(global.API_POST_PAYBILL, cc.handlePayBill).Methods(http.MethodPost)
-	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet)
+	cc.router.HandleFunc(global.API_GET_FOOD_BY_QUERY, cc.handleGetFoodByQuery).Methods(http.MethodPost, http.MethodOptions)           //approved
+	cc.router.HandleFunc(global.API_GET_SEATS, cc.handleGetSeats).Methods(http.MethodGet, http.MethodOptions)                          //approved
+	cc.router.HandleFunc(global.API_GET_WAITERS, cc.handleGetWaiter).Methods(http.MethodGet, http.MethodOptions)                       //approved
+	cc.router.HandleFunc(global.API_GET_SUM_PEOPLE, cc.handleSumPeople).Methods(http.MethodGet, http.MethodOptions)                    //approved
+	cc.router.HandleFunc(global.API_GET_DETAILS, cc.handleGetCustomersDetails).Methods(http.MethodGet, http.MethodOptions)             //approved
+	cc.router.HandleFunc(global.API_GET_DETAIL_BY_CUSTOMER_ID, cc.handleOrderByCustomerID).Methods(http.MethodGet, http.MethodOptions) //approved
+	cc.router.HandleFunc(global.API_POST_ORDER, cc.handlePlaceOrder).Methods(http.MethodPost, http.MethodOptions)                      //approved
+	cc.router.HandleFunc(global.API_POST_PAYBILL, cc.handlePayBill).Methods(http.MethodPost, http.MethodOptions)                       //approved
+	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet, http.MethodOptions)        //approved
+	cc.router.HandleFunc(global.API_GET_FOOD_BY_ID, cc.handleFoodByID).Methods(http.MethodGet, http.MethodOptions)                     //approved
+	cc.router.HandleFunc(global.API_GET_TYPES, cc.handleGetTypes).Methods(http.MethodGet, http.MethodOptions)                          //approved
+	cc.router.HandleFunc(global.API_RESTOCK, cc.handleRestock).Methods(http.MethodGet, http.MethodOptions)
 }

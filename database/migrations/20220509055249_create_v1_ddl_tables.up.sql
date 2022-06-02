@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS orders(
 	order_id BIGINT NOT NULL AUTO_INCREMENT,
 	customer_id BIGINT,
 	waiter_id INT,
+	total_price INT,
 	ordered_at DATETIME,
 	PRIMARY KEY (order_id),
 	FOREIGN KEY (customer_id) REFERENCES customer(customer_id)

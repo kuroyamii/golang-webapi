@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	cafeDto "github.com/kuroyamii/golang-webapi/internal/cafe/dto"
 	CafeRepository "github.com/kuroyamii/golang-webapi/internal/cafe/repository/api"
@@ -47,8 +48,9 @@ func (cs cafeServiceImpl) SearchFood(ctx context.Context, query string) (cafeDto
 	return foodsResponse, nil
 }
 
-func (cs cafeServiceImpl) GetAllFoodByType(ctx context.Context, food_type string) (cafeDto.FoodsResponse, error) {
+func (cs cafeServiceImpl) GetAllFoodByType(ctx context.Context, food_type []string) (cafeDto.FoodsResponse, error) {
 	foods, err := cs.cr.GetAllFoodByType(ctx, food_type)
+	// log.Println(foods)
 	if err != nil {
 		return nil, err
 	}
@@ -224,28 +226,25 @@ func (cs cafeServiceImpl) GetCustomerOrderByCustomerID(ctx context.Context, cust
 	return orderResponse, nil
 }
 
-func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int) error {
+func (cs cafeServiceImpl) PlaceOrder(ctx context.Context, customerName string, tableID int, foodID []int, waiterID int, amount []int, price int) (uint64, error) {
 	err := cs.cr.ReserveTable(ctx, tableID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	customerID, err := cs.cr.InsertCustomer(ctx, customerName, tableID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	sum, err := cs.cr.GetSumWaiter(ctx)
+	orderID, err := cs.cr.InsertOrder(ctx, customerID, waiterID, price)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	orderID, err := cs.cr.InsertOrder(ctx, customerID, sum)
+	log.Println(orderID)
+	err = cs.cr.InsertOrderDetails(ctx, orderID, foodID, amount)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	err = cs.cr.InsertOrderDetails(ctx, orderID, foodID)
-	if err != nil {
-		return err
-	}
-	return nil
+	return customerID, nil
 }
 
 func (cs cafeServiceImpl) PayBill(ctx context.Context, customerID uint64) error {
@@ -272,4 +271,82 @@ func (cs cafeServiceImpl) GetCustomerByID(ctx context.Context, customerID uint64
 		CustomerID: customerID,
 	}
 	return customer, nil
+}
+func (cs cafeServiceImpl) GetFoodByFoodID(ctx context.Context, foodID int) (cafeDto.FoodResponse, error) {
+	food, err := cs.cr.GetFoodByFoodID(ctx, foodID)
+
+	if err != nil {
+		return cafeDto.FoodResponse{}, err
+	}
+	foodResponse := cafeDto.FoodResponse{
+		FoodID:      food.FoodID,
+		Name:        food.Name,
+		ImagePath:   food.ImagePath,
+		Price:       food.Price,
+		FoodType:    food.FoodType,
+		Description: food.Description,
+		Stock:       food.Stock,
+	}
+	return foodResponse, nil
+}
+
+func (cs cafeServiceImpl) GetEstimatedIncome(ctx context.Context) (cafeDto.EstimatedIncomesResponse, error) {
+	ei, err := cs.cr.GetEstimatedIncome(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var eiResponse cafeDto.EstimatedIncomesResponse
+	for _, item := range ei {
+		i := cafeDto.EstimatedIncomeResponse{
+			RecordID:        item.RecordID,
+			FoodName:        item.FoodName,
+			EstimatedIncome: item.EstimatedIncome,
+		}
+		eiResponse = append(eiResponse, &i)
+	}
+	return eiResponse, nil
+}
+
+func (cs cafeServiceImpl) GetFoodTypes(ctx context.Context) (cafeDto.FoodTypesResponse, error) {
+	foodTypes, err := cs.cr.GetFoodType(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var foodTypesResponse cafeDto.FoodTypesResponse
+	for _, item := range foodTypes {
+		foodType := cafeDto.FoodTypeResponse{
+			TypeName: item.FoodType,
+		}
+		foodTypesResponse = append(foodTypesResponse, &foodType)
+	}
+	return foodTypesResponse, nil
+}
+
+func (cs cafeServiceImpl) GetFoodByTypeAndName(ctx context.Context, name string, foodType []string) (cafeDto.FoodsResponse, error) {
+	foods, err := cs.cr.GetByTypeAndName(ctx, name, foodType)
+	if err != nil {
+		return nil, err
+	}
+	var foodsResponse cafeDto.FoodsResponse
+	for _, item := range foods {
+		food := cafeDto.FoodResponse{
+			FoodID:      item.FoodID,
+			Name:        item.Name,
+			ImagePath:   item.ImagePath,
+			Price:       item.Price,
+			Description: item.Description,
+			Stock:       item.Stock,
+			FoodType:    item.FoodType,
+		}
+		foodsResponse = append(foodsResponse, &food)
+	}
+	return foodsResponse, nil
+}
+
+func (cs cafeServiceImpl) RestockAll(ctx context.Context) error {
+	err := cs.cr.Restock(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

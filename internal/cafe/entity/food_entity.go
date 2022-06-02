@@ -77,3 +77,10 @@ type Log struct {
 }
 
 type Logs []*Log
+
+type EstimatedIncome struct {
+	RecordID        uint64 `db:"record_id"`
+	FoodName        string `db:"food_name"`
+	EstimatedIncome int    `db:"estimated_income"`
+}
+type EstimatedIncomes []*EstimatedIncome
