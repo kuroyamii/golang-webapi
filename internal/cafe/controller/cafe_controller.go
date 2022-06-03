@@ -299,5 +299,5 @@ func (cc *CafeController) InitializeEndpoints() {
 	cc.router.HandleFunc(global.API_GET_CUSTOMER_BY_ID, cc.handleGetSingleCustomer).Methods(http.MethodGet, http.MethodOptions)        //approved
 	cc.router.HandleFunc(global.API_GET_FOOD_BY_ID, cc.handleFoodByID).Methods(http.MethodGet, http.MethodOptions)                     //approved
 	cc.router.HandleFunc(global.API_GET_TYPES, cc.handleGetTypes).Methods(http.MethodGet, http.MethodOptions)                          //approved
-	cc.router.HandleFunc(global.API_RESTOCK, cc.handleRestock).Methods(http.MethodGet, http.MethodOptions)
+	cc.router.HandleFunc(global.API_RESTOCK, cc.handleRestock).Methods(http.MethodGet, http.MethodOptions) //approved
 }
