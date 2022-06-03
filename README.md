@@ -3,12 +3,57 @@
 [![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
+
 # Overview
+
 ## Prerequisites
+
 - Have installed MySQL
 - Have installed Go
-- Have installed Database Migrations ``https://github.com/golang-migrate/migrate``
+- Have installed Database Migrations `https://github.com/golang-migrate/migrate`
 - Have learned the basics of Go
+
+## Get Started
+
+- First of all, you must make an empty database in your MySQL
+- Create a `.env` file like below (change if it's needed):
+  ```bash
+  SERVER_ADDRESS=127.0.0.1:8080
+  DB_ADDRESS=localhost:3309
+  DB_USERNAME=root
+  DB_PASSWORD=
+  DB_NAME=inugami_db
+  WHITELISTED_URLS=http://localhost:3000
+  ```
+- Run database migration. Example:</br></br>
+  To run a migration
+
+```bash
+migrate -source file://directory-to-migration-folder -database "database-connection-query" up <number>
+
+//example
+migrate -source file://./db/migration -database "mysql://root:@tcp(localhost:3307)/inugami_db" up
+```
+
+To rollback a migration
+
+```bash
+migrate -source file://directory-to-migration-folder -database "database-connection-query" down <number>
+
+//example
+migrate -source file://./db/migration -database "mysql://root:@tcp(localhost:3307)/inugami_db" down 1
+```
+
+To create a new migration file
+
+```bash
+migrate create -ext sql -dir migrations <migration-name>
+
+//example
+migrate create -ext sql -dir migrations create_tables
+```
+
+- Run main.go in cmd/main
 
 ## Contributors ✨
 
